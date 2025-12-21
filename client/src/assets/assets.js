@@ -115,8 +115,8 @@ export const roomCommonData = [
 // User Dummy Data
 export const userDummyData = {
     "_id": "user_2unqyL4diJFP1E3pIBnasc7w8hP",
-    "username": "Great Stack",
-    "email": "user.greatstack@gmail.com",
+    "username": "Chetan Malviya",
+    "email": "user.chetan@gmail.com",
     "image": "https://media.licdn.com/dms/image/v2/D4D03AQE7sn6HAwrhAg/profile-displayphoto-scale_400_400/B4DZlSoXs7HsAo-/0/1758027939467?e=1767830400&v=beta&t=E7mSB0m550mLJS3VWqq-DilQsqHLzvaGuyXza_eMmbU",
     "role": "hotelOwner",
     "createdAt": "2025-03-25T09:29:16.367Z",
