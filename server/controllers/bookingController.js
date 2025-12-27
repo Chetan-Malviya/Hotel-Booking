@@ -2,6 +2,7 @@ import transporter from "../configs/nodemailer.js";
 import Booking from "../models/Booking.js";
 import Hotel from "../models/Hotel.js";
 import Room from "../models/Room.js";
+import stripe from "stripe";
 
 
 // Function to check Availabity of Room 
@@ -71,6 +72,7 @@ export const createBooking = async (req, res) => {
       totalPrice,
     })
 
+    // Send confirmation email if SMTP is configured; booking should not fail on email issues
     const mailOptions = {
       from: process.env.SENDER_EMAIL,
       to: req.user.email,
@@ -91,7 +93,15 @@ export const createBooking = async (req, res) => {
       `
     }
 
-    await transporter.sendMail(mailOptions)
+    try {
+      if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+        await transporter.sendMail(mailOptions)
+      } else {
+        console.warn('SMTP credentials missing; booking email not sent')
+      }
+    } catch (mailError) {
+      console.warn('Failed to send booking email:', mailError.message)
+    }
 
     res.json({ success: true, message: "Booking Created Successfully"})
 
@@ -129,5 +139,66 @@ export const getHotelBookings = async (req, res) => {
 
   } catch (error) {
     res.json({success: false, message: "Failed to fetch Bookings"})
+  }
+}
+
+export const stripePayment = async (req, res) => {
+  try {
+    const {bookingId} = req.body;
+
+    const booking = await Booking.findById(bookingId);
+    const roomData = await Room.findById(booking.room).populate('hotel');
+    const totalPrice = booking.totalPrice;
+    const {origin} = req.headers;
+
+    const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY);
+
+    const line_items = [
+      {
+        price_data:{
+          currency: "usd",
+          product_data:{
+            name: roomData.hotel.name,
+          },
+          unit_amount: totalPrice * 100
+        },
+        quantity: 1,
+      }
+    ]
+
+    // create checkout session
+    const session = await stripeInstance.checkout.sessions.create({
+      line_items,
+      mode: "payment",
+      success_url: `${origin}/loader/my-bookings?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/my-bookings`,
+      metadata:{
+        bookingId,
+      }
+    })
+    res.json({success: true, url: session.url})
+
+  } catch (error) {
+    res.json({success: false, message: "Payment Failed"})
+  }
+}
+
+// API to verify payment after returning from Stripe
+export const verifyPayment = async (req, res) => {
+  try {
+    const { sessionId } = req.body;
+    const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY);
+    
+    const session = await stripeInstance.checkout.sessions.retrieve(sessionId);
+    
+    if(session.payment_status === "paid") {
+      const { bookingId } = session.metadata;
+      await Booking.findByIdAndUpdate(bookingId, { isPaid: true, paymentMethod: "Stripe" });
+      return res.json({ success: true, message: "Payment verified successfully" });
+    }
+    
+    res.json({ success: false, message: "Payment not completed" });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
   }
 }
