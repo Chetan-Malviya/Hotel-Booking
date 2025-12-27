@@ -22,8 +22,13 @@ const RoomDetails = () => {
   // Check if the room is available
   const checkAvailability = async () => {
     try {
-      // Check that Check-in date is greater than check-out date
-      if(checkInDate >= checkOutDate) {
+      // Check that both dates are selected
+      if(!checkInDate || !checkOutDate) {
+        toast.error('Please select both Check-In and Check-Out dates')
+        return;
+      }
+      // Check that Check-in date is less than check-out date
+      if(new Date(checkInDate) >= new Date(checkOutDate)) {
         toast.error('Check-In Date should be less than Check-Out Date')
         return;
       }
