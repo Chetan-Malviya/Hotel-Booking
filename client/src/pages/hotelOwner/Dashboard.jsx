@@ -16,10 +16,10 @@ const Dashboard = () => {
   const fetchDashboardData = async () => {
     try {
       const {data} = await axios.get('/api/bookings/hotel', {headers: {Authorization: `Bearer ${await getToken()}`}})
-      if(data.success) {
+      if(data.success && data.dashboardData) {
         setDashboardData(data.dashboardData)
       } else {
-        toast.error(data.message)
+        toast.error(data.message || "Failed to load dashboard data")
       }
     } catch (error) {
       toast.error(error.message)
@@ -42,7 +42,7 @@ const Dashboard = () => {
           <img src={assets.totalBookingIcon} alt="" className='max-sm:hidden h-10' />
           <div className='flex flex-col sm:ml-4 font-medium'>
             <p className='text-blue-500 text-lg'>Total Bookings</p>
-            <p className='text-neutral-400 text-base'>{dashboardData.totalBookings}</p>
+            <p className='text-neutral-400 text-base'>{dashboardData?.totalBookings || 0}</p>
           </div>
         </div>
 
@@ -51,7 +51,7 @@ const Dashboard = () => {
           <img src={assets.totalRevenueIcon} alt="" className='max-sm:hidden h-10' />
           <div className='flex flex-col sm:ml-4 font-medium'>
             <p className='text-blue-500 text-lg'>Total Revenue</p>
-            <p className='text-neutral-400 text-base'>{currency} {dashboardData.totalRevenue}</p>
+            <p className='text-neutral-400 text-base'>{currency} {dashboardData?.totalRevenue || 0}</p>
           </div>
         </div>
       </div>
@@ -72,7 +72,7 @@ const Dashboard = () => {
             </thead>
 
             <tbody className='text-sm'>
-              {dashboardData.bookings.map((item, index)=>(
+              {(dashboardData?.bookings || []).map((item, index)=>(
                 <tr key={index}>
                   <td className='py-3 px-4 text-gray-700 border-t border-gray-300'>{item.user?.username || 'N/A'}</td>
                   <td className='py-3 px-4 text-gray-700 border-t border-gray-300 max-sm:hidden'>{item.room?.roomType || 'N/A'}</td>
