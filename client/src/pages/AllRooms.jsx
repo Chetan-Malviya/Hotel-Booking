@@ -79,7 +79,7 @@ const AllRooms = () => {
   // Function to check if a room matches the selected price range
   const matchesPriceRange = (room) => {
     return selectedFilters.priceRange.length === 0 || selectedFilters.priceRange.some(range => {
-      const [min, max] = range.split('to').map(Number);
+      const [min, max] = range.split(' to ').map(Number);
       return room.pricePerNight >= min && room.pricePerNight <= max;
     })
   }

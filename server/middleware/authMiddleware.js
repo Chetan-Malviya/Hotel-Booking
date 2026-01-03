@@ -1,4 +1,5 @@
 import User from "../models/User.js";
+import { clerkClient } from "@clerk/express";
 
 // Middleware to check if user is Authenticated
 export const protect = async (req, res, next)=> {
@@ -6,16 +7,26 @@ export const protect = async (req, res, next)=> {
 
   // Short-circuit when not authenticated
   if (!userId) {
-    return res.status(401).json({ success: false, message: "Not authenticated" });
+    return res.json({ success: false, message: "Not authenticated" });
   }
-
-  const user = await User.findById(userId);
-
-  // Guard against deleted / missing user records
+  
+  let user = await User.findById(userId);
+  
+  // If user doesn't exist in database, create them from Clerk data
   if (!user) {
-    return res.status(401).json({ success: false, message: "User not found" });
+    try {
+      const clerkUser = await clerkClient.users.getUser(userId);
+      user = await User.create({
+        _id: userId,
+        email: clerkUser.emailAddresses[0].emailAddress,
+        username: clerkUser.firstName + " " + clerkUser.lastName,
+        image: clerkUser.imageUrl,
+      });
+    } catch (error) {
+      return res.json({ success: false, message: "Unable to create user: " + error.message });
+    }
   }
-
+  
   req.user = user;
   next();
 }

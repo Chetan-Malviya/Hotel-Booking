@@ -129,7 +129,7 @@ export const getHotelBookings = async (req, res) => {
   if(!hotel) {
     return res.json({ success: false, message: "No Hotel Found"});
   }
-  const bookings = (await Booking.find({hotel: hotel._id}).populate("room hotel user")).sort({createdAt: -1});
+  const bookings = await Booking.find({hotel: hotel._id}).populate("room hotel user").sort({createdAt: -1});
   // Total Booking
   const totalBookings = bookings.length;
   // Total Revenue

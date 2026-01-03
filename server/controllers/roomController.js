@@ -25,7 +25,6 @@ export const createRoom = async (req, res) => {
       pricePerNight: +pricePerNight,
       amenities: JSON.parse(amenitites),
       images,
-      isAvailable: true
     })
     res.json({ success: true, message: "Room Created Successfully"})
 
@@ -37,7 +36,7 @@ export const createRoom = async (req, res) => {
 // API to get all rooms
 export const getRooms = async (req, res) => {
   try {
-    const rooms = await Room.find({isAvailable: true}). populate({
+    const rooms = await Room.find({isAvailable: true}).populate({
       path: 'hotel',
       populate: {
         path: 'owner',

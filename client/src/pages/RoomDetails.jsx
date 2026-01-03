@@ -72,12 +72,30 @@ const RoomDetails = () => {
 
   useEffect(() => {
     const room = rooms.find((room) => room._id === id);
-    room && setRoom(room);
-    room && setMainImage(room.images[0]);
-  }, [rooms]);
+    // Only set room if it exists and has valid hotel data
+    if (room && room.hotel) {
+      setRoom(room);
+      setMainImage(room.images[0]);
+    }
+  }, [rooms, id]);
+
+  // Show message if room or hotel doesn't exist
+  if (!room || !room.hotel) {
+    return (
+      <div className="py-28 md:py-35 px-4 md:px-16 lg:px-24 xl:px-32 text-center">
+        <h1 className="text-2xl font-playfair">Room not found</h1>
+        <p className="text-gray-500 mt-2">This room may no longer be available.</p>
+        <button 
+          onClick={() => navigate('/rooms')} 
+          className="mt-4 px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600"
+        >
+          Browse All Rooms
+        </button>
+      </div>
+    );
+  }
 
   return (
-    room && (
       <div className="py-28 md:py-35 px-4 md:px-16 lg:px-24 xl:px-32">
         {/* Room detials */}
         <div className="flex flex-col md:flex-row items-start md:items-center gap-2">
@@ -249,7 +267,7 @@ const RoomDetails = () => {
         <div className="flex flex-col items-start gap-4">
           <div className="flex gap-4">
             <img
-              src={room.hotel.owner.image}
+              src={room.hotel.owner?.image || assets.userIcon}
               alt="Host"
               className="h-14 w-14 md:h-18 md:w-18 rounded-full"
             />
@@ -266,7 +284,6 @@ const RoomDetails = () => {
           </button>
         </div>
       </div>
-    )
   );
 };
 
